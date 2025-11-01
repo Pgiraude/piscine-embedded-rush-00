@@ -15,23 +15,21 @@ void TWI_send_data(char c)
 }
 
 void main(void) {
+	DDRB |= (1 << PB4); // show master
+	PORTB |= (1 << PB4);
+
 	TWI_init(MASTER_ADDR);
 
 	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN); // send START condition
 	while (!(TWCR & (1 << TWINT))); // wait for TWINT flag set, this indicates that the START condition has been transmitted
 
-	if ((TWSR & 0xF8) != START) {
+	if ((TWSR & 0xF8) != START) //check value of TWI Status Register. Mask prescaler bits
 		ft_info(ERROR_1);
-		return;
-	} //check value of TWI Status Register. Mask prescaler bits
 	
 	TWI_send_address(SLAVE_ADDR, WRITE);
 
 	if ((TWSR & 0xF8) != MT_SLA_ACK) // check TWI Status Register
-	{
 		ft_info(ERROR_2);
-		return;
-	}
 	
 	TWI_send_data('Z');
 	
