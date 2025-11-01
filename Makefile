@@ -7,7 +7,7 @@ F_CPU = 16000000UL	# 16MHz clock source
 # ========================================
 # PROJECT CONFIGURATION
 # ========================================
-NAME = main
+NAME = master
 SLAVE_NAME = slave
 SRC = $(NAME).c
 
