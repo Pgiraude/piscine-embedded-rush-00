@@ -2,37 +2,24 @@
 
 void lights(uint8_t n)
 {
+	DDRB |= (1 << PB1) | (1 << PB2);
 	if (n == 1)
 	{
-		DDRD |= (1 << PD6);
-		PORTD |= (1 << PD6);
-	}
-	else if (n == 0)
-	{
-		PORTD &= ~(1 << PD6);
-		PORTD &= ~(1 << PD5);
+		PORTB |= (1 << PB1);
+		PORTB &= ~(1 << PB2);
 	}
 	else if (n == 2)
 	{
-		DDRD |= (1 << PD5) | (1 << PD6);
-		PORTD |= (1 << PD5) | (1 << PD6);
+		PORTB |= (1 << PB2);
+		PORTB &= ~(1 << PB1);
 	}
-}
-
-void checkAllValues(uint8_t val) {
-    for (uint16_t i = 130; i <= 132; i++) {
-        if (val == i) {
-            got_hit();
-            break;
-        }
-    }
 }
 
 void main() {
 	TWI_init(0x00);
 
 	while (1) {
-
+		lights(1);
 		TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 	
 		while (!(TWCR & (1 << TWINT)));
@@ -58,10 +45,8 @@ void main() {
 	
 		TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 	
-		lights(1);
 		_delay_ms(1000);
-		lights(0);
-		_delay_ms(1000);
+		lights(2);
 
 		TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
@@ -90,10 +75,6 @@ void main() {
 
 		TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-		_delay_ms(100);
-		lights(2);
-		_delay_ms(1000);
-		lights(0);
 		_delay_ms(1000);
 	}
 }
