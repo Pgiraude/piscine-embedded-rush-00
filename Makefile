@@ -8,6 +8,7 @@ F_CPU = 16000000UL	# 16MHz clock source
 # PROJECT CONFIGURATION
 # ========================================
 NAME = main
+SLAVE_NAME = slave
 SRC = $(NAME).c
 
 # ========================================
@@ -58,5 +59,10 @@ disasm: $(NAME).bin
 # Clean generated files
 clean:
 	rm -f $(NAME).bin $(NAME).hex $(NAME).asm
+
+slave:
+	$(COMPILER) $(CFLAGS) $(SLAVE_NAME).c -o $(SLAVE_NAME).bin
+	$(CONVERTER_TOOL) -O ihex $(SLAVE_NAME).bin $(SLAVE_NAME).hex
+	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT) -U flash:w:$(SLAVE_NAME).hex
 
 .PHONY: all hex flash clean disasm
