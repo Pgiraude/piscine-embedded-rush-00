@@ -38,7 +38,6 @@ void TWI_bus_recover(void) {
 }
 
 void TWI_send_start() {
-	TWI_bus_recover();
 	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
 	while (!(TWCR & (1 << TWINT))); //START condition has been transmitted
@@ -68,7 +67,7 @@ void TWI_send_data(char c)
 	TWDR = c;
 	TWCR = (1 << TWINT) | (1 << TWEN);
 }
-
+/*
 void init_timer1(void)
 {
 	TCCR1B |= (1 << WGM12) | (1 << CS12) | (1 << CS10); // CTC mode, 1024 prescalar
@@ -82,7 +81,7 @@ ISR(TIMER1_COMPA_vect) {
 		direction = RECIVE;
 	else 
 		direction = TRANSMIT;
-}
+}*/
 
 ISR(PCINT2_vect)
 {
@@ -142,22 +141,8 @@ void master_recive()
 void main(void)
 {
 	LED_MASTER_ON;
-	got_hit();
-	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-
-	PCICR |= (1 << PCIE2); // enable Pin CHange Interrupt group for PORTD
-    PCMSK2 |= (1 << PCINT20); // enable interrupt for PD4 specifically
 	
 	TWI_init(MASTER_ADDR);
 
-	init_timer1();
-	sei();
-
-	while (1)
-	{
-		if (direction == TRANSMIT)
-			master_transmit();
-		else
-			master_recive();
-	}
+	TWI_send_start();
 }
