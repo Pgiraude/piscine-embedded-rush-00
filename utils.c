@@ -29,4 +29,5 @@ void ft_info(uint8_t status) {
 			PORTD |= (1 << PD6);
 			break;
 	}
+	
 }

@@ -16,6 +16,7 @@ SLAVE_SRC = $(SLAVE_NAME).c utils.c
 # SERIAL COMMUNICATION
 # ========================================
 PORT ?= /dev/ttyUSB0	# Serial port (Linux default)
+PORT_SLAVE ?= /dev/ttyUSB1	# Serial port (Linux default)
 BAUD_RATE = 115200		# Baud rate for serial communication
 BOARD = arduino			# Bootloader type
 
@@ -69,6 +70,6 @@ clean:
 	rm -f $(SLAVE_NAME).bin $(SLAVE_NAME).hex $(SLAVE_NAME).asm
 
 slave: $(SLAVE_NAME).hex
-	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT) -U flash:w:$(SLAVE_NAME).hex
+	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT_SLAVE) -U flash:w:$(SLAVE_NAME).hex
 
-.PHONY: all hex flash clean disasm
+.PHONY: all hex flash clean disasm slave
