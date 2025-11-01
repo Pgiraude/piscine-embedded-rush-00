@@ -8,7 +8,7 @@
 
 #define WRITE		0
 #define READ		1
-#define SLAVE_ADDR	0x20
+#define SLAVE_ADDR	0x12
 #define MASTER_ADDR	0x00
 
 #define SUCCESS		0
@@ -44,7 +44,7 @@
 
 //uint8_t button_pressed = 0;
 
-void TWI_init(uint8_t my_address);
+//void TWI_init(uint8_t my_address);
 void ft_error(uint8_t status);
 void got_hit();
 

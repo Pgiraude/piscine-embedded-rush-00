@@ -1,74 +1,58 @@
 #include "TWI.h"
-/*
-uint8_t button_pressed = 0;
-
-uint8_t TWI_check_bus(void)
-{
-    while (!(TWCR & (1 << TWINT)));
-
-    uint8_t status = TWSR & TW_STATUS_MASK;
-
-    if (status == TW_SR_SLA_ACK)
-        return SLAVE_RECIVE;
-    if (status == TW_ST_SLA_ACK)
-        return SLAVE_TRANSMIT;
-    if (status == TW_SR_DATA_ACK)
-        return TWDR;
-}
-
-int main(void)
-{
-    //LED_SLAVE_ON;
-    got_hit();
-
-    TWI_init(SLAVE_ADDR);
-    TWCR_SLAVE_RESET;
-
-    uint8_t data = 0;
-    uint8_t tw_action = SLAVE_RECIVE;
-
-    while (1)
-    {
-        data = TWI_check_bus();
-        if (data == SLAVE_RECIVE)
-            tw_action = SLAVE_RECIVE;
-        else if (data == SLAVE_TRANSMIT)
-            tw_action = SLAVE_TRANSMIT;
-
-        if (tw_action == SLAVE_RECIVE) {
-            if (data == MASTER_BUTTON_PRESSED)
-                got_hit();
-        }
-        if (tw_action == SLAVE_TRANSMIT && button_pressed) {
-            TWDR = SLAVE_BUTTON_PRESSED;
-            TWCR_SLAVE_RESET;
-        }
-    }
-}
-*/
+#define F_CPU 16000000UL
 
 void TWI_init_slave(uint8_t address) {
-    // Set own address
-    TWAR = (address << 1);
+    TWAR = (address << 1);          // Set own 7-bit address
+    TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT); // Enable TWI, ACK, clear INT
+}
 
-    // Enable TWI, ACK, and clear interrupt flag
-    TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
-
-    // Optional: enable weak pull-ups
-    PORTC |= (1 << PC4) | (1 << PC5);
+void TWI_ready(void) {
+    TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT);
 }
 
 int main(void) {
     TWI_init_slave(SLAVE_ADDR);
 
-    // Main loop — just stay ready, do nothing
-    while (1) {
-        // Always re-arm ACK and clear TWINT if set
-        if (TWCR & (1 << TWINT)) {
-            TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
+    uint8_t dummy = 'B'; // byte to send
+    uint8_t received = 0;
+
+    while(1) {
+        if(TWCR & (1<<TWINT)) {
+            uint8_t status = TWSR & 0xF8;
+
+            switch(status) {
+                // --- Master read request ---
+                case 0xA8: // SLA+R received, ACK returned
+                    TWDR = dummy;           // load the byte to send
+                    TWCR = (1<<TWEN)|(1<<TWEA)|(1<<TWINT); // clear TWINT to start transmission
+                    break;
+
+                case 0xB8: // Data transmitted, ACK received
+                    TWDR = dummy;           // next byte if needed
+                    TWCR = (1<<TWEN)|(1<<TWEA)|(1<<TWINT);
+                    break;
+
+                case 0xC0: // Data transmitted, NACK received
+                case 0xC8: // Last data transmitted, ACK received
+                case 0xA0: // STOP or repeated START
+                    TWI_ready();            // prepare for next transaction
+                    break;
+
+                // --- Master write request ---
+                case 0x60: // SLA+W received
+                case 0x80: // Data received
+                case 0x88: // Data received, NACK
+                    received = TWDR;           // read byte to clear buffer
+                    if (received == 'A') {
+                        got_hit();
+                    }
+                    TWI_ready();
+                    break;
+
+                default:                     // unexpected states
+                    TWI_ready();
+                    break;
+            }
         }
     }
 }
-
-
-

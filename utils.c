@@ -20,6 +20,8 @@ void ft_error(uint8_t status)
 
 	PORTB |= (status & 0x07);
 
+	TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
+
 	while (1);
 }
 
