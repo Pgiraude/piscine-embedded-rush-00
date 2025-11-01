@@ -1,66 +1,74 @@
 #include "TWI.h"
 /*
-int main() {
-    DDRB |= (1 << PB2); // show slave
-    PORTB |= (1 << PB2);
+uint8_t button_pressed = 0;
 
-    TWI_init(SLAVE_ADDR);
-    
-    TWCR = (1 << TWEA) | (1 << TWEN) | (1 << TWINT);
-    
+uint8_t TWI_check_bus(void)
+{
     while (!(TWCR & (1 << TWINT)));
-    
-    if ((TWSR & 0xF8) != MT_DATA_ACK)
-        ft_info(ERROR_2);
-    
-    ft_info(SUCCESS);
-}*/
 
-void TWI_init_slave(uint8_t address)
-{
-    TWAR = (address << 1);                   // Load slave address into TWI Address Register
-    TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT); // Enable TWI, ACK, and clear interrupt flag
-}
+    uint8_t status = TWSR & TW_STATUS_MASK;
 
-uint8_t TWI_wait_for_data(void)
-{
-    // Wait for data or address match
-    while (!(TWCR & (1 << TWINT)));          // Wait until TWINT is set
-
-    uint8_t status = TWSR & 0xF8;            // Get status bits (mask prescaler)
-
-    if (status == 0x60) { // Own SLA+W received, ACK returned
-        // Wait for data
-        TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT); // Ready to receive data
-        while (!(TWCR & (1 << TWINT)));      // Wait until data received
-        status = TWSR & 0xF8;
-        if (status == 0x80) {
-            uint8_t data = TWDR;             // Read received byte
-            return data;                      // Return the received data
-        }
-    }
-
-    return 0xFF; // No valid data received
+    if (status == TW_SR_SLA_ACK)
+        return SLAVE_RECIVE;
+    if (status == TW_ST_SLA_ACK)
+        return SLAVE_TRANSMIT;
+    if (status == TW_SR_DATA_ACK)
+        return TWDR;
 }
 
 int main(void)
 {
-    DDRB |= (1 << PB2); // show slave
-    PORTB |= (1 << PB2);
-    uint8_t received = 0;
+    //LED_SLAVE_ON;
+    got_hit();
 
-    TWI_init_slave(SLAVE_ADDR);
+    TWI_init(SLAVE_ADDR);
+    TWCR_SLAVE_RESET;
+
+    uint8_t data = 0;
+    uint8_t tw_action = SLAVE_RECIVE;
 
     while (1)
     {
-        received = TWI_wait_for_data();      // Wait for data from master
+        data = TWI_check_bus();
+        if (data == SLAVE_RECIVE)
+            tw_action = SLAVE_RECIVE;
+        else if (data == SLAVE_TRANSMIT)
+            tw_action = SLAVE_TRANSMIT;
 
-        // Example: toggle a pin when a byte is received
-        if (received == 'Z') {
-            ft_info(SUCCESS);
+        if (tw_action == SLAVE_RECIVE) {
+            if (data == MASTER_BUTTON_PRESSED)
+                got_hit();
         }
-        else
-            ft_info(ERROR_1);
+        if (tw_action == SLAVE_TRANSMIT && button_pressed) {
+            TWDR = SLAVE_BUTTON_PRESSED;
+            TWCR_SLAVE_RESET;
+        }
     }
 }
+*/
+
+void TWI_init_slave(uint8_t address) {
+    // Set own address
+    TWAR = (address << 1);
+
+    // Enable TWI, ACK, and clear interrupt flag
+    TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+
+    // Optional: enable weak pull-ups
+    PORTC |= (1 << PC4) | (1 << PC5);
+}
+
+int main(void) {
+    TWI_init_slave(SLAVE_ADDR);
+
+    // Main loop — just stay ready, do nothing
+    while (1) {
+        // Always re-arm ACK and clear TWINT if set
+        if (TWCR & (1 << TWINT)) {
+            TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
+        }
+    }
+}
+
+
 

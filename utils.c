@@ -9,26 +9,23 @@ void TWI_init(uint8_t my_address) {
 	TWBR = 72; // F_SCL = 100kHz
 	TWSR = 0x00;  // sets prescaler bits TWPS1 and TWPS0 to zero, so TWPS = 0 (prescaler = 1)
 	// F_SCL = F_CPU / (16 + 2 * TWBR * 4^TWPS)
-
-	TWCR = (1 << TWEN); // enable TWI
 }
 
-void ft_info(uint8_t status) {
-	if (status == SUCCESS) {
-		DDRD |= (1 << PD6);
-		PORTD |= (1 << PD6);
-		while (1);
-	}
-
+void ft_error(uint8_t status) 
+{
 	DDRD |= (1 << PD5);
-	PORTD |= (1 << PD5); 
-	
-	if (status == ERROR_1) {
-		DDRB |= (1 << PB0);
-		PORTB |= (1 << PB0);
-	}
-	else if (status == ERROR_2)
-		DDRB |= (1 << PB1);
-		PORTB |= (1 << PB1);
+	PORTD |= (1 << PD5);
+
+	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
+
+	PORTB |= (status & 0x07);
+
 	while (1);
+}
+
+void got_hit() {
+	DDRD |= (1 << PD3);
+	PORTD |= (1 << PD3);
+	_delay_ms(50);
+	PORTD &= ~(1 << PD3);
 }
