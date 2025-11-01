@@ -9,7 +9,8 @@ F_CPU = 16000000UL	# 16MHz clock source
 # ========================================
 NAME = master
 SLAVE_NAME = slave
-SRC = $(NAME).c
+SRC = $(NAME).c utils.c
+SLAVE_SRC = $(SLAVE_NAME).c utils.c
 
 # ========================================
 # SERIAL COMMUNICATION
@@ -37,6 +38,12 @@ CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os
 
 all: hex flash
 
+$(SLAVE_NAME).bin: $(SLAVE_SRC)
+	$(COMPILER) $(CFLAGS) $(SLAVE_SRC) -o $(SLAVE_NAME).bin
+
+$(SLAVE_NAME).hex: $(SLAVE_NAME).bin
+	$(CONVERTER_TOOL) -O ihex $(SLAVE_NAME).bin $(SLAVE_NAME).hex
+
 # Compile C source into ELF binary
 $(NAME).bin: $(SRC)
 	$(COMPILER) $(CFLAGS) $(SRC) -o $(NAME).bin
@@ -59,10 +66,9 @@ disasm: $(NAME).bin
 # Clean generated files
 clean:
 	rm -f $(NAME).bin $(NAME).hex $(NAME).asm
+	rm -f $(SLAVE_NAME).bin $(SLAVE_NAME).hex $(SLAVE_NAME).asm
 
-slave:
-	$(COMPILER) $(CFLAGS) $(SLAVE_NAME).c -o $(SLAVE_NAME).bin
-	$(CONVERTER_TOOL) -O ihex $(SLAVE_NAME).bin $(SLAVE_NAME).hex
+slave: $(SLAVE_NAME).hex
 	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT) -U flash:w:$(SLAVE_NAME).hex
 
 .PHONY: all hex flash clean disasm

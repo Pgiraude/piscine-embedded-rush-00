@@ -14,6 +14,19 @@ void TWI_init(uint8_t my_address) {
 }
 
 void ft_info(uint8_t status) {
-	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-	
+
+	switch (status) {
+		case ERROR_1:
+			DDRD |= (1 << PD5);
+			PORTD |= (1 << PD5);
+			break;
+		case ERROR_2:
+			DDRD |= (1 << PD5) | (1 << PD6);
+			PORTD |= (1 << PD5) | (1 << PD6);
+			break;
+		case SUCCESS:
+			DDRD |= (1 << PD6);
+			PORTD |= (1 << PD6);
+			break;
+	}
 }
