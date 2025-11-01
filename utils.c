@@ -17,7 +17,17 @@ void ft_info(uint8_t status) {
 	if (status == SUCCESS) {
 		DDRD |= (1 << PD6);
 		PORTD |= (1 << PD6);
-		while (1);
+		_delay_ms(5);
+		PORTD &= ~(1 << PD6);
+		return;
+	}
+
+	if (status == DEBUG) {
+		DDRD |= (1 << PD6) | (1 << PD5) | (1 << PD3);
+		PORTD |= (1 << PD6) | (1 << PD5) | (1 << PD3);
+		_delay_ms(1000);
+		PORTD &= ~((1 << PD6) | (1 << PD5) | (1 << PD3));
+		return;
 	}
 
 	DDRD |= (1 << PD5);
@@ -27,8 +37,16 @@ void ft_info(uint8_t status) {
 		DDRB |= (1 << PB0);
 		PORTB |= (1 << PB0);
 	}
-	else if (status == ERROR_2)
+	else if (status == ERROR_2) {
+
 		DDRB |= (1 << PB1);
 		PORTB |= (1 << PB1);
+	}
+	else if (status == ERROR_3)
+	{
+		DDRB |= (1 << PB1) | (1 << PB0);
+		PORTB |= (1 << PB1) | (1 << PB0);
+	}
+
 	while (1);
 }

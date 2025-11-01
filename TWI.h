@@ -11,8 +11,10 @@
 #define MASTER_ADDR	0x00
 
 #define SUCCESS		0
-#define ERROR_1		1
-#define ERROR_2		2
+#define DEBUG		1
+#define ERROR_1		2
+#define ERROR_2		3
+#define ERROR_3		4
 
 #define START		0x08
 #define MT_SLA_ACK	0x18 // Master Transmit, Slave Address with bit write, Acknowledge
