@@ -28,6 +28,6 @@ void ft_error(uint8_t status)
 void got_hit() {
 	DDRD |= (1 << PD3);
 	PORTD |= (1 << PD3);
-	_delay_ms(50);
+	_delay_ms(20);
 	PORTD &= ~(1 << PD3);
 }

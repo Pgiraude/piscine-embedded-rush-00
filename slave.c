@@ -1,6 +1,22 @@
 #include "TWI.h"
 #define F_CPU 16000000UL
 
+uint8_t button_pressed = 0;
+
+ISR(PCINT2_vect)
+{
+    static int pressed = 0;
+    pressed = (pressed + 1) % 2; //skips one pin change interrupt (when releasing)
+
+    if (pressed == 1 && button_pressed == 0)
+	{
+		button_pressed = 1;
+	}
+
+    _delay_ms(20);
+    PCIFR |= (1 << PCIF2); // clear any pending interrupts
+}
+
 void TWI_init_slave(uint8_t address) {
     TWAR = (address << 1);          // Set own 7-bit address
     TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT); // Enable TWI, ACK, clear INT
@@ -13,6 +29,10 @@ void TWI_ready(void) {
 int main(void) {
     TWI_init_slave(SLAVE_ADDR);
 
+    sei(); // Enable global interrupts
+    PCICR |= (1 << PCIE2); // Enable pin change interrupt for PCINT[23:16]
+    PCMSK2 |= (1 << PCINT20); // Enable pin change interrupt for PCINT20 (PD2)
+
     uint8_t dummy = 'B'; // byte to send
     uint8_t received = 0;
 
@@ -23,15 +43,16 @@ int main(void) {
             switch(status) {
                 // --- Master read request ---
                 case 0xA8: // SLA+R received, ACK returned
-                    TWDR = dummy;           // load the byte to send
+                    if (button_pressed == 1) {
+                        button_pressed = 0;
+                        TWDR = SLAVE_BUTTON_PRESSED;
+                    }
+                    else
+                    TWDR = dummy;         // load the byte to send
                     TWCR = (1<<TWEN)|(1<<TWEA)|(1<<TWINT); // clear TWINT to start transmission
                     break;
 
                 case 0xB8: // Data transmitted, ACK received
-                    TWDR = dummy;           // next byte if needed
-                    TWCR = (1<<TWEN)|(1<<TWEA)|(1<<TWINT);
-                    break;
-
                 case 0xC0: // Data transmitted, NACK received
                 case 0xC8: // Last data transmitted, ACK received
                 case 0xA0: // STOP or repeated START
@@ -43,7 +64,7 @@ int main(void) {
                 case 0x80: // Data received
                 case 0x88: // Data received, NACK
                     received = TWDR;           // read byte to clear buffer
-                    if (received == 'A') {
+                    if (received == MASTER_BUTTON_PRESSED) {
                         got_hit();
                     }
                     TWI_ready();
