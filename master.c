@@ -1,44 +1,16 @@
 #include "TWI.h"
 
-uint8_t button_pressed = 0;
 uint8_t someone_won = 0;
-
-ISR(PCINT2_vect)
-{
-    static int pressed = 0;
-    pressed = (pressed + 1) % 2; //skips one pin change interrupt (when releasing)
-
-    if (pressed == 1 && button_pressed == 0)
-	{
-		button_pressed = 1;
-	}
-
-    _delay_ms(20);
-    PCIFR |= (1 << PCIF2); // clear any pending interrupts
-}
-
-void lights(uint8_t n)
-{
-	DDRB |= (1 << PB1) | (1 << PB2);
-	if (n == 1)
-	{
-		PORTB |= (1 << PB1);
-		PORTB &= ~(1 << PB2);
-	}
-	else if (n == 2)
-	{
-		PORTB |= (1 << PB2);
-		PORTB &= ~(1 << PB1);
-	}
-}
 
 void main() {
 	TWI_init(0x00);
 
 	sei(); // Enable global interrupts
+
 	PCICR |= (1 << PCIE2); // Enable pin change interrupt for PCINT[23:16]
 	PCMSK2 |= (1 << PCINT20); // Enable pin change interrupt for PCINT20 (PD2)
-
+	
+	got_hit();
 	while (1) {
 		TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 	
