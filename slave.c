@@ -7,20 +7,27 @@ void slave_init() {
 
 void slave_loop(void) {
     uint8_t f_game_over = 0;
+    playing = 0;
+    uint8_t data;
 
     interrupt_init();
     while (1) {
         if (TWCR & (1 << TWINT)) {
             if (f_game_over == 1)
                 end_game(WON);
+            if (f_game_over == 2)
+                end_game(LOST);
             uint8_t status = TWSR & TW_STATUS_MASK;
 
             switch (status) {
             case TW_ST_SLA_ACK:
             case TW_ST_DATA_ACK:
-                if (button_pressed == 1) {
+                if (button_pressed == 1 && playing == 1) {
                     TWDR = OPPONENT_BUTTON_PRESSED;
                     f_game_over = 1;
+                } else if (button_pressed == 1 && playing == 0) {
+                    TWDR = OPPONENT_LOST;
+                    f_game_over = 2;
                 } else
                     TWDR = 'A';
                 break;
@@ -31,8 +38,13 @@ void slave_loop(void) {
                 break;
 
             case TW_SR_DATA_ACK:
-                if (TWDR == OPPONENT_BUTTON_PRESSED)
+                data = TWDR;
+                if (data == OPPONENT_BUTTON_PRESSED)
                     end_game(LOST);
+                else if (data == TIMER_NOW)
+                    call_timer();
+                else if (data == OPPONENT_LOST)
+                    end_game(WON);
                 break;
             default:
                 ft_error(ERROR_1);

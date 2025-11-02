@@ -10,6 +10,8 @@ void master_init() {
 
 void master_loop() {
     uint8_t f_game_over = 0;
+	playing = 0;
+	uint8_t need_to_timer = 1;
 	
 	interrupt_init();
     while (1) {
@@ -31,9 +33,15 @@ void master_loop() {
         if ((TWSR & TW_STATUS_MASK) != TW_MT_SLA_ACK)
             ft_error(ERROR_2);
 
-        if (button_pressed == 1) {
+		if (need_to_timer == 1) {
+			TWDR = TIMER_NOW;
+		}
+        else if (button_pressed == 1 && playing == 1) {
             TWDR = OPPONENT_BUTTON_PRESSED;
             f_game_over = 1;
+        } else if (button_pressed == 1 && playing == 0) {
+			TWDR = OPPONENT_LOST;
+			f_game_over = 2;
         } else
             TWDR = 'A';
 
@@ -47,8 +55,14 @@ void master_loop() {
 
         TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
+		if (need_to_timer == 1) {
+			call_timer();
+			need_to_timer = 0;
+		}
         if (f_game_over == 1)
             end_game(WON);
+		if (f_game_over == 2)
+			end_game(LOST);
 
         _delay_ms(5);
 
@@ -79,12 +93,16 @@ void master_loop() {
 
         uint8_t data = TWDR;
         if (data == OPPONENT_BUTTON_PRESSED)
-            f_game_over = 1;
+            f_game_over = 2;
+		else if (data == OPPONENT_LOST)
+			f_game_over = 1;
 
         TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-        if (f_game_over == 1)
+        if (f_game_over == 2)
             end_game(LOST);
+		if (f_game_over == 1)
+			end_game(WON);
 
         _delay_ms(5);
     }

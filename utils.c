@@ -78,3 +78,49 @@ void end_game(uint8_t result) {
     while (1)
         ;
 }
+
+void call_timer() {
+    // Set CTC mode (Clear Timer on Compare Match)
+    TCCR1B |= (1 << WGM12);
+
+    // Set compare value for 1 Hz (1 second)
+    OCR1A = 15624;
+
+    // Enable interrupt on compare match A
+    TIMSK1 |= (1 << OCIE1A);
+
+    // Set prescaler to 1024 and start the timer
+    TCCR1B |= (1 << CS12) | (1 << CS10);
+
+    // Enable global interrupts
+    sei();
+
+	DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
+	PORTB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
+}
+
+uint8_t count_down = 0;
+
+ISR(TIMER1_COMPA_vect)
+{
+	count_down++;
+	if (count_down == 1)
+	{
+		PORTB &= ~(1 << PB4);
+	}
+	else if (count_down == 2)
+	{
+		PORTB &= ~(1 << PB2);
+	}
+	else if (count_down == 3)
+	{
+		PORTB &= ~(1 << PB1);
+	}
+	else if (count_down == 4)
+	{
+		PORTB &= ~(1 << PB0);
+		TCCR1B = 0; // stop timer
+		playing = 1;
+	}
+}
+

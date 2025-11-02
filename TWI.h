@@ -16,6 +16,8 @@
 #define FREE 0
 #define BUSY 1
 
+#define TIMER_NOW 5
+
 #define RED 1
 #define GREEN 2
 #define BLUE 3
@@ -38,10 +40,12 @@
 #define LOST 1
 
 #define OPPONENT_BUTTON_PRESSED 1
+#define OPPONENT_LOST 2
 
 #define SW2_PRESSED !(PIND & (1 << PD4))
 
 uint8_t button_pressed;
+uint8_t playing;
 
 void master_init();
 void master_loop();
@@ -52,5 +56,6 @@ void end_game(uint8_t result);
 void ready_flash();
 void interrupt_init();
 void light(uint8_t color);
+void call_timer();
 
 #endif
