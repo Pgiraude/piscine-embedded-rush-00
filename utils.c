@@ -29,54 +29,49 @@ void ft_error(uint8_t status) {
         ;
 }
 void light(uint8_t color) {
-	DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
-	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4);
-	if (color == WHITE) {
-		PORTD |= (1 <<PD3)| (1 << PD5) | (1 << PD6);
-	}
-	else if (color == BLUE) {
-		PORTD = (1 << PD3);
-		PORTD &= ~((1 << PD5) | (1 << PD6));
-	}
-	else if (color == GREEN) {
-		PORTD = (1 << PD6);
-		PORTD &= ~((1 << PD3) | (1 << PD5));
-	}
-	else if (color == RED) {
-		PORTD = (1 << PD5);
-		PORTD &= ~((1 << PD3) | (1 << PD6));
-	}
-	else if (color == BLACK) {
-		PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
-	}
-	else if (color == LED1) {
-		PORTB = (1 << PB0);
-		PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB4));
-	}
-	else if (color == LED2) {
-		PORTB = (1 << PB1);
-		PORTB &= ~((1 << PB0) | (1 << PB2) | (1 << PB4));
-	}
-	else if (color == LED3) {
-		PORTB = (1 << PB2);
-		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB4));
-	}
-	else if (color == LED4) {
-		PORTB = (1 << PB4);
-		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2));
-	}
+    DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
+    DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4);
+    if (color == WHITE) {
+        PORTD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
+    } else if (color == BLUE) {
+        PORTD = (1 << PD3);
+        PORTD &= ~((1 << PD5) | (1 << PD6));
+    } else if (color == GREEN) {
+        PORTD = (1 << PD6);
+        PORTD &= ~((1 << PD3) | (1 << PD5));
+    } else if (color == RED) {
+        PORTD = (1 << PD5);
+        PORTD &= ~((1 << PD3) | (1 << PD6));
+    } else if (color == BLACK) {
+        PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
+    } else if (color == LED1) {
+        PORTB = (1 << PB0);
+        PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB4));
+    } else if (color == LED2) {
+        PORTB = (1 << PB1);
+        PORTB &= ~((1 << PB0) | (1 << PB2) | (1 << PB4));
+    } else if (color == LED3) {
+        PORTB = (1 << PB2);
+        PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB4));
+    } else if (color == LED4) {
+        PORTB = (1 << PB4);
+        PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2));
+    }
 }
 
 void end_game(uint8_t result) {
-    if (result == WON) {
-        DDRD |= (1 << PD6);
-        PORTD |= (1 << PD6);
-    } else if (result == LOST) {
-        DDRD |= (1 << PD5);
-        PORTD |= (1 << PD5);
+    if (result == UNDECIDED) {
+        return;
     }
-    while (1)
-        ;
+    if (result == WON) {
+        light(GREEN);
+    } else if (result == LOST) {
+        light(RED);
+    }
+    _delay_ms(3000);
+    game_state = GAME_WAITING_PLAYER;
+    your_are = UNDECIDED;
+    light(BLACK);
 }
 
 void call_timer() {
@@ -95,32 +90,37 @@ void call_timer() {
     // Enable global interrupts
     sei();
 
-	DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
-	PORTB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
+    DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
+    PORTB |= (1 << PB1) | (1 << PB2) | (1 << PB0) | (1 << PB4);
 }
 
 uint8_t count_down = 0;
 
-ISR(TIMER1_COMPA_vect)
-{
-	count_down++;
-	if (count_down == 1)
-	{
-		PORTB &= ~(1 << PB4);
-	}
-	else if (count_down == 2)
-	{
-		PORTB &= ~(1 << PB2);
-	}
-	else if (count_down == 3)
-	{
-		PORTB &= ~(1 << PB1);
-	}
-	else if (count_down == 4)
-	{
-		PORTB &= ~(1 << PB0);
-		TCCR1B = 0; // stop timer
-		playing = 1;
-	}
+void end_timer() {
+    DDRB = 0x00;
+    PORTB = 0x00;
+    count_down = 0;
+    TIMSK1 = 0; // Disable timer interrupt
+    TCCR1B = 0;
 }
 
+ISR(TIMER1_COMPA_vect) {
+    count_down++;
+    switch (count_down) {
+    case 1:
+        PORTB &= ~(1 << PB4);
+        break;
+    case 2:
+        PORTB &= ~(1 << PB2);
+        break;
+    case 3:
+        PORTB &= ~(1 << PB1);
+        break;
+    case 4:
+        PORTB &= ~(1 << PB0);
+        break;
+    default:
+        end_timer();
+        game_state = GAME_STARTED;
+    }
+}

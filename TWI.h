@@ -36,16 +36,33 @@
 #define ERROR_6 6
 #define ERROR_7 7
 
-#define WON 0
-#define LOST 1
+#define UNDECIDED 0
+#define WON 1
+#define LOST 2
 
-#define OPPONENT_BUTTON_PRESSED 1
 #define OPPONENT_LOST 2
+
+#define DEFAULT_BIT 0x00
+#define PLAYER_READY_BIT 0x50
+#define START_GAME_COUNTDOWN_BIT 0x51
+#define OPPONENT_LOST_BIT 0x52
+#define OPPONENT_BUTTON_PRESSED 0x53
+
+#define GAME_WAITING_PLAYER 0
+#define GAME_COUNTDOWN 1
+#define GAME_STARTED 2
+#define GAME_OVER 3
+#define GAME_REBOOT 4
+#define ASSIGN_ROLE 5
 
 #define SW2_PRESSED !(PIND & (1 << PD4))
 
 uint8_t button_pressed;
 uint8_t playing;
+uint8_t game_state;
+uint8_t is_master_ready;
+uint8_t is_slave_ready;
+uint8_t your_are;
 
 void master_init();
 void master_loop();
@@ -57,5 +74,7 @@ void ready_flash();
 void interrupt_init();
 void light(uint8_t color);
 void call_timer();
+void set_game_start(void);
+void end_timer();
 
 #endif
