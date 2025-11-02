@@ -11,18 +11,22 @@ void TWI_init(uint8_t my_address) {
 	// F_SCL = F_CPU / (16 + 2 * TWBR * 4^TWPS)
 }
 
+void interrupt_init() {
+	sei();
+	PCICR |= (1 << PCIE2); // enable Pin Change Interrupt for group D 
+	PCMSK2 |= (1 << PCINT18); // enable specifically for PD2
+}
+
 ISR(PCINT2_vect)
 {
     static int pressed = 0;
-    pressed = (pressed + 1) % 2; //skips one pin change interrupt (when releasing)
+    pressed = (pressed + 1) % 2;
 
     if (pressed == 1 && button_pressed == 0)
-	{
 		button_pressed = 1;
-	}
 
     _delay_ms(20);
-    PCIFR |= (1 << PCIF2); // clear any pending interrupts
+    PCIFR |= (1 << PCIF2);
 }
 
 void ft_error(uint8_t status) 
@@ -37,19 +41,19 @@ void ft_error(uint8_t status)
 	while (1);
 }
 
-void got_hit() {
+void ready_flash() {
 	DDRD |= (1 << PD3);
 	PORTD |= (1 << PD3);
 	_delay_ms(20);
 	PORTD &= ~(1 << PD3);
 }
 
-void player_won(uint8_t player) {
-	if (player == MASTER) {
+void end_game(uint8_t result) {
+	if (result == WON) {
 		DDRD |= (1 << PD6);
 		PORTD |= (1 << PD6);
 	}
-	else if (player == SLAVE) {
+	else if (result == LOST) {
 		DDRD |= (1 << PD5);
 		PORTD |= (1 << PD5);
 	}

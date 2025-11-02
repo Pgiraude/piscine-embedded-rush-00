@@ -1,17 +1,14 @@
 #include "TWI.h"
 
-uint8_t someone_won = 0;
-
 void main() {
+	uint8_t f_game_over = 0;
+
 	TWI_init(0x00);
+	interrupt_init();
 
-	sei(); // Enable global interrupts
-
-	PCICR |= (1 << PCIE2); // Enable pin change interrupt for PCINT[23:16]
-	PCMSK2 |= (1 << PCINT20); // Enable pin change interrupt for PCINT20 (PD2)
-	
-	got_hit();
+	ready_flash();
 	while (1) {
+		//	TRANSMITING
 		TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 	
 		while (!(TWCR & (1 << TWINT)));
@@ -28,12 +25,10 @@ void main() {
 			ft_error(ERROR_2);
 	
 		if (button_pressed == 1) {
-			button_pressed = 0;
-			TWDR = MASTER_BUTTON_PRESSED;
-			someone_won = 1;
+			TWDR = OPPONENT_BUTTON_PRESSED;
+			f_game_over = 1;
 		}
-		else
-			TWDR = 'A';
+		else TWDR = 'A';
 
 		TWCR = (1 << TWINT) | (1 << TWEN);
 	
@@ -44,11 +39,12 @@ void main() {
 		
 		TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-		if (someone_won == 1)
-			player_won(MASTER);
+		if (f_game_over == 1)
+			end_game(WON);
 	
 		_delay_ms(5);
 
+		//	RECIVING
 		TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
 		while (!(TWCR & (1 << TWINT)));
@@ -71,13 +67,13 @@ void main() {
 			ft_error(ERROR_6);
 
 		uint8_t data = TWDR;
-		if (data == SLAVE_BUTTON_PRESSED)
-			someone_won = 1;
+		if (data == OPPONENT_BUTTON_PRESSED)
+			f_game_over = 1;
 
 		TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-		if (someone_won == 1)
-			player_won(SLAVE);
+		if (f_game_over == 1)
+			end_game(LOST);
 		
 		_delay_ms(5);
 	}
