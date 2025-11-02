@@ -68,6 +68,8 @@ void light(uint8_t color) {
 }
 
 void end_game(uint8_t result) {
+    if (GAME_OVER != game_state)
+        return;
     if (result == WON) {
         DDRD |= (1 << PD6);
         PORTD |= (1 << PD6);
@@ -75,6 +77,9 @@ void end_game(uint8_t result) {
         DDRD |= (1 << PD5);
         PORTD |= (1 << PD5);
     }
-    while (1)
-        ;
+    _delay_ms(2000);
+    PORTD = 0x00;
+    DDRD = 0x00;
+    button_pressed = 0; // Reset button state
+    game_state = GAME_WAITING_PLAYER;
 }
