@@ -1,20 +1,16 @@
 #include "TWI.h"
 
-int slave(void) {
+void slave_init() {
+    TWAR = (SLAVE_ADDR << 1); // save the address in [7-1] bits, bit [0] is for
+	TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+}
+
+void slave_loop(void) {
     uint8_t f_game_over = 0;
-    int role_determined = 0;
 
-    TWI_init(SLAVE_ADDR);
     interrupt_init();
-
-    TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
-
-    ready_flash(SLAVE);
-    DDRD = 0x00;
-    PORTD = (1 << PD4);
     while (1) {
         if (TWCR & (1 << TWINT)) {
-            role_determined = 1;
             if (f_game_over == 1)
                 end_game(WON);
             uint8_t status = TWSR & TW_STATUS_MASK;
@@ -43,9 +39,5 @@ int slave(void) {
             }
             TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
         }
-        if (SW2_PRESSED && !role_determined) {
-            break;
-        }
     }
-    return 0;
 }

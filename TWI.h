@@ -12,6 +12,19 @@
 #define MASTER_ADDR 0x00
 #define MASTER 0
 #define SLAVE 1
+#define ERROR 2
+#define FREE 0
+#define BUSY 1
+
+#define RED 1
+#define GREEN 2
+#define BLUE 3
+#define WHITE 4
+#define BLACK 5
+#define LED1 7
+#define LED2 8
+#define LED3 10
+#define LED4 11
 
 #define ERROR_1 1
 #define ERROR_2 2
@@ -30,11 +43,14 @@
 
 uint8_t button_pressed;
 
-void TWI_init(uint8_t my_address);
+void master_init();
+void master_loop();
+void slave_init();
+void slave_loop();
 void ft_error(uint8_t status);
 void end_game(uint8_t result);
 void ready_flash();
 void interrupt_init();
-int slave(void);
+void light(uint8_t color);
 
 #endif

@@ -1,18 +1,5 @@
 #include "TWI.h"
 
-void TWI_init(uint8_t my_address) {
-    DDRC &= ~((1 << PC4) | (1 << PC5)); //	SDA/SCL input
-    PORTC |= (1 << PC4) | (1 << PC5);   //	enable pull-ups
-
-    TWAR = (my_address << 1); // save the address in [7-1] bits, bit [0] is for
-                              // General Call Enable
-
-    TWBR = 72;   // F_SCL = 100kHz
-    TWSR = 0x00; // sets prescaler bits TWPS1 and TWPS0 to zero, so TWPS = 0
-                 // (prescaler = 1)
-                 // F_SCL = F_CPU / (16 + 2 * TWBR * 4^TWPS)
-}
-
 void interrupt_init() {
     sei();
     PCICR |= (1 << PCIE2);    // enable Pin Change Interrupt for group D
@@ -41,25 +28,43 @@ void ft_error(uint8_t status) {
     while (1)
         ;
 }
-
-void ready_flash(int mode) {
-    if (MASTER == mode) {
-        DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
-        PORTD |= (1 << PD5);
-        _delay_ms(200);
-        PORTD |= (1 << PD6);
-        _delay_ms(200);
-        PORTD &= ~(1 << PD5) | (1 << PD6);
-        PORTD |= (1 << PD3);
-        _delay_ms(200);
-        DDRD = 0x00;
-        PORTD = 0x00;
-        return;
-    }
-    DDRD |= (1 << PD3);
-    PORTD |= (1 << PD3);
-    _delay_ms(20);
-    PORTD &= ~(1 << PD3);
+void light(uint8_t color) {
+	DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
+	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4);
+	if (color == WHITE) {
+		PORTD |= (1 <<PD3)| (1 << PD5) | (1 << PD6);
+	}
+	else if (color == BLUE) {
+		PORTD = (1 << PD3);
+		PORTD &= ~((1 << PD5) | (1 << PD6));
+	}
+	else if (color == GREEN) {
+		PORTD = (1 << PD6);
+		PORTD &= ~((1 << PD3) | (1 << PD5));
+	}
+	else if (color == RED) {
+		PORTD = (1 << PD5);
+		PORTD &= ~((1 << PD3) | (1 << PD6));
+	}
+	else if (color == BLACK) {
+		PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
+	}
+	else if (color == LED1) {
+		PORTB = (1 << PB0);
+		PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB4));
+	}
+	else if (color == LED2) {
+		PORTB = (1 << PB1);
+		PORTB &= ~((1 << PB0) | (1 << PB2) | (1 << PB4));
+	}
+	else if (color == LED3) {
+		PORTB = (1 << PB2);
+		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB4));
+	}
+	else if (color == LED4) {
+		PORTB = (1 << PB4);
+		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2));
+	}
 }
 
 void end_game(uint8_t result) {

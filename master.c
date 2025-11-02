@@ -1,13 +1,17 @@
 #include "TWI.h"
 
-void main() {
+void master_init() {
+	TWBR = 72;   // F_SCL = 100kHz
+    TWSR = 0x00; // sets prescaler bits TWPS1 and TWPS0 to zero, so TWPS = 0
+                 // (prescaler = 1)
+                 // F_SCL = F_CPU / (16 + 2 * TWBR * 4^TWPS)
+	TWCR = (1 << TWEN) | (1 << TWINT);
+}
+
+void master_loop() {
     uint8_t f_game_over = 0;
-
-    slave();
-
-    TWI_init(MASTER_ADDR);
-    interrupt_init();
-    ready_flash(MASTER);
+	
+	interrupt_init();
     while (1) {
         //	TRANSMITING
         TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);

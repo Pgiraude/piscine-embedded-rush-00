@@ -7,8 +7,8 @@ F_CPU = 16000000UL	# 16MHz clock source
 # ========================================
 # PROJECT CONFIGURATION
 # ========================================
-NAME = master
-SRC = $(NAME).c utils.c slave.c
+NAME = main
+SRC = $(NAME).c utils.c slave.c master.c
 
 # ========================================
 # SERIAL COMMUNICATION
