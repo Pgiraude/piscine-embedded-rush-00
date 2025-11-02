@@ -8,15 +8,13 @@ F_CPU = 16000000UL	# 16MHz clock source
 # PROJECT CONFIGURATION
 # ========================================
 NAME = master
-SLAVE_NAME = slave
-SRC = $(NAME).c utils.c
-SLAVE_SRC = $(SLAVE_NAME).c utils.c
+SRC = $(NAME).c utils.c slave.c
 
 # ========================================
 # SERIAL COMMUNICATION
 # ========================================
 PORT ?= /dev/ttyUSB0	# Serial port (Linux default)
-PORT_SLAVE ?= /dev/ttyUSB1	# Serial port (Linux default)
+PORT2 ?= /dev/ttyUSB1	# Serial port (Linux default)
 BAUD_RATE = 115200		# Baud rate for serial communication
 BOARD = arduino			# Bootloader type
 
@@ -38,12 +36,6 @@ CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os
 # ========================================
 
 all: hex flash
-
-$(SLAVE_NAME).bin: $(SLAVE_SRC)
-	$(COMPILER) $(CFLAGS) $(SLAVE_SRC) -o $(SLAVE_NAME).bin
-
-$(SLAVE_NAME).hex: $(SLAVE_NAME).bin
-	$(CONVERTER_TOOL) -O ihex $(SLAVE_NAME).bin $(SLAVE_NAME).hex
 
 # Compile C source into ELF binary
 $(NAME).bin: $(SRC)
@@ -67,9 +59,10 @@ disasm: $(NAME).bin
 # Clean generated files
 clean:
 	rm -f $(NAME).bin $(NAME).hex $(NAME).asm
-	rm -f $(SLAVE_NAME).bin $(SLAVE_NAME).hex $(SLAVE_NAME).asm
 
-slave: $(SLAVE_NAME).hex
-	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT_SLAVE) -U flash:w:$(SLAVE_NAME).hex
+flash2: $(NAME).hex
+	$(FLASHER_TOOL) -p $(MCU) -c $(BOARD) -b $(BAUD_RATE) -P $(PORT2) -U flash:w:$(NAME).hex
 
-.PHONY: all hex flash clean disasm slave
+both: all flash2 
+
+.PHONY: all hex flash clean disasm flash2 both

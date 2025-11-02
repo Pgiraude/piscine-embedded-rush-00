@@ -1,28 +1,32 @@
 #ifndef TWI_H
 #define TWI_H
 
+#include <avr/interrupt.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <util/twi.h>
-#include <avr/interrupt.h>
 
-#define WRITE		0
-#define READ		1
-#define SLAVE_ADDR	0x12
-#define MASTER_ADDR	0x00
+#define WRITE 0
+#define READ 1
+#define SLAVE_ADDR 0x12
+#define MASTER_ADDR 0x00
+#define MASTER 0
+#define SLAVE 1
 
-#define ERROR_1		1
-#define ERROR_2		2
-#define ERROR_3		3
-#define ERROR_4		4
-#define ERROR_5		5
-#define ERROR_6		6
-#define ERROR_7		7
+#define ERROR_1 1
+#define ERROR_2 2
+#define ERROR_3 3
+#define ERROR_4 4
+#define ERROR_5 5
+#define ERROR_6 6
+#define ERROR_7 7
 
 #define WON 0
 #define LOST 1
 
 #define OPPONENT_BUTTON_PRESSED 1
+
+#define SW2_PRESSED !(PIND & (1 << PD4))
 
 uint8_t button_pressed;
 
@@ -31,5 +35,6 @@ void ft_error(uint8_t status);
 void end_game(uint8_t result);
 void ready_flash();
 void interrupt_init();
+int slave(void);
 
 #endif
