@@ -27,6 +27,8 @@
 #define SLAVE_TRANSMIT 2
 #define TRANSMIT 1
 #define RECIVE 2
+#define MASTER 0
+#define SLAVE 1
 
 #define SLAVE_BUTTON_PRESSED 1
 #define MASTER_BUTTON_PRESSED 2
@@ -47,5 +49,6 @@
 //void TWI_init(uint8_t my_address);
 void ft_error(uint8_t status);
 void got_hit();
+void player_won(uint8_t player);
 
 #endif

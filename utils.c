@@ -31,3 +31,15 @@ void got_hit() {
 	_delay_ms(20);
 	PORTD &= ~(1 << PD3);
 }
+
+void player_won(uint8_t player) {
+	if (player == MASTER) {
+		DDRD |= (1 << PD6);
+		PORTD |= (1 << PD6);
+	}
+	else if (player == SLAVE) {
+		DDRD |= (1 << PD5);
+		PORTD |= (1 << PD5);
+	}
+	while (1);
+}

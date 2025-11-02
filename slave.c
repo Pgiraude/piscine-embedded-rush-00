@@ -2,6 +2,7 @@
 #define F_CPU 16000000UL
 
 uint8_t button_pressed = 0;
+uint8_t someone_won = 0;
 
 ISR(PCINT2_vect)
 {
@@ -38,6 +39,8 @@ int main(void) {
 
     while(1) {
         if(TWCR & (1<<TWINT)) {
+            if (someone_won == 1)
+                player_won(MASTER); // to be changed
             uint8_t status = TWSR & 0xF8;
 
             switch(status) {
@@ -46,6 +49,7 @@ int main(void) {
                     if (button_pressed == 1) {
                         button_pressed = 0;
                         TWDR = SLAVE_BUTTON_PRESSED;
+                        someone_won = 1;
                     }
                     else
                     TWDR = dummy;         // load the byte to send
@@ -65,7 +69,7 @@ int main(void) {
                 case 0x88: // Data received, NACK
                     received = TWDR;           // read byte to clear buffer
                     if (received == MASTER_BUTTON_PRESSED) {
-                        got_hit();
+                        player_won(SLAVE);
                     }
                     TWI_ready();
                     break;
