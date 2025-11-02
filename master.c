@@ -1,6 +1,12 @@
 #include "TWI.h"
 
-void game_state_transmit(void) {
+void master_init() {
+    TWBR = 72;
+    TWSR = 0x00;
+    TWCR = (1 << TWEN) | (1 << TWINT);
+}
+
+void master_state_transmit(void) {
     switch (game_state) {
     case GAME_WAITING_PLAYER:
         if (button_pressed) {
@@ -34,7 +40,7 @@ void game_state_transmit(void) {
     button_pressed = 0;
 }
 
-void game_state_receive(void) {
+void master_state_receive(void) {
     switch (game_state) {
     case GAME_WAITING_PLAYER:
         if (TWDR == PLAYER_READY_BIT) {
@@ -56,16 +62,12 @@ void game_state_receive(void) {
     }
 }
 
-void main() {
+void master_loop() {
     uint8_t f_game_over = 0;
     is_master_ready = 0;
     is_slave_ready = 0;
 
-    slave();
-
-    TWI_init(MASTER_ADDR);
     interrupt_init();
-    ready_flash(MASTER);
     while (1) {
         //	TRANSMITING
         TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
@@ -84,66 +86,50 @@ void main() {
 
         if ((TWSR & TW_STATUS_MASK) != TW_MT_SLA_ACK)
             ft_error(ERROR_2);
-        // ------------------------------------------------------------
-        // TRANSMITING GAME STATE
-        game_state_transmit();
 
-        if (button_pressed == 1) {
-            TWDR = OPPONENT_BUTTON_PRESSED;
-            end_game(WON, &f_game_over);
+        master_state_transmit();
 
-            // ------------------------------------------------------------
+        TWCR = (1 << TWINT) | (1 << TWEN);
 
-            TWCR = (1 << TWINT) | (1 << TWEN);
+        while (!(TWCR & (1 << TWINT)))
+            ;
 
-            while (!(TWCR & (1 << TWINT)))
-                ;
+        if ((TWSR & TW_STATUS_MASK) != TW_MT_DATA_ACK)
+            ft_error(ERROR_3);
 
-            if ((TWSR & TW_STATUS_MASK) != TW_MT_DATA_ACK)
-                ft_error(ERROR_3);
+        TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-            TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
+        _delay_ms(5);
 
-            if (f_game_over == 1)
-                end_game(WON, &f_game_over);
+        //	RECIVING
+        TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
 
-            _delay_ms(5);
+        while (!(TWCR & (1 << TWINT)))
+            ;
 
-            //	RECIVING
-            TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
+        if ((TWSR & TW_STATUS_MASK) != TW_START)
+            ft_error(ERROR_4);
 
-            while (!(TWCR & (1 << TWINT)))
-                ;
+        TWDR = (SLAVE_ADDR << 1) | READ;
+        TWCR = (1 << TWINT) | (1 << TWEN);
 
-            if ((TWSR & TW_STATUS_MASK) != TW_START)
-                ft_error(ERROR_4);
+        while (!(TWCR & (1 << TWINT)))
+            ;
 
-            TWDR = (SLAVE_ADDR << 1) | READ;
-            TWCR = (1 << TWINT) | (1 << TWEN);
+        if ((TWSR & TW_STATUS_MASK) != TW_MR_SLA_ACK)
+            ft_error(ERROR_5);
 
-            while (!(TWCR & (1 << TWINT)))
-                ;
+        TWCR = (1 << TWINT) | (1 << TWEN);
+        while (!(TWCR & (1 << TWINT)))
+            ;
 
-            if ((TWSR & TW_STATUS_MASK) != TW_MR_SLA_ACK)
-                ft_error(ERROR_5);
+        if ((TWSR & TW_STATUS_MASK) != TW_MR_DATA_NACK)
+            ft_error(ERROR_6);
 
-            TWCR = (1 << TWINT) | (1 << TWEN);
-            while (!(TWCR & (1 << TWINT)))
-                ;
+        master_state_receive();
 
-            if ((TWSR & TW_STATUS_MASK) != TW_MR_DATA_NACK)
-                ft_error(ERROR_6);
+        TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
 
-            uint8_t data = TWDR;
-            if (data == OPPONENT_BUTTON_PRESSED)
-                f_game_over = 1;
-
-            TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
-
-            if (f_game_over == 1)
-                end_game(LOST, &f_game_over);
-
-            _delay_ms(5);
-        }
+        _delay_ms(5);
     }
 }

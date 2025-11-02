@@ -29,42 +29,34 @@ void ft_error(uint8_t status) {
         ;
 }
 void light(uint8_t color) {
-	DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
-	DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4);
-	if (color == WHITE) {
-		PORTD |= (1 <<PD3)| (1 << PD5) | (1 << PD6);
-	}
-	else if (color == BLUE) {
-		PORTD = (1 << PD3);
-		PORTD &= ~((1 << PD5) | (1 << PD6));
-	}
-	else if (color == GREEN) {
-		PORTD = (1 << PD6);
-		PORTD &= ~((1 << PD3) | (1 << PD5));
-	}
-	else if (color == RED) {
-		PORTD = (1 << PD5);
-		PORTD &= ~((1 << PD3) | (1 << PD6));
-	}
-	else if (color == BLACK) {
-		PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
-	}
-	else if (color == LED1) {
-		PORTB = (1 << PB0);
-		PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB4));
-	}
-	else if (color == LED2) {
-		PORTB = (1 << PB1);
-		PORTB &= ~((1 << PB0) | (1 << PB2) | (1 << PB4));
-	}
-	else if (color == LED3) {
-		PORTB = (1 << PB2);
-		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB4));
-	}
-	else if (color == LED4) {
-		PORTB = (1 << PB4);
-		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2));
-	}
+    DDRD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
+    DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4);
+    if (color == WHITE) {
+        PORTD |= (1 << PD3) | (1 << PD5) | (1 << PD6);
+    } else if (color == BLUE) {
+        PORTD = (1 << PD3);
+        PORTD &= ~((1 << PD5) | (1 << PD6));
+    } else if (color == GREEN) {
+        PORTD = (1 << PD6);
+        PORTD &= ~((1 << PD3) | (1 << PD5));
+    } else if (color == RED) {
+        PORTD = (1 << PD5);
+        PORTD &= ~((1 << PD3) | (1 << PD6));
+    } else if (color == BLACK) {
+        PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
+    } else if (color == LED1) {
+        PORTB = (1 << PB0);
+        PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB4));
+    } else if (color == LED2) {
+        PORTB = (1 << PB1);
+        PORTB &= ~((1 << PB0) | (1 << PB2) | (1 << PB4));
+    } else if (color == LED3) {
+        PORTB = (1 << PB2);
+        PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB4));
+    } else if (color == LED4) {
+        PORTB = (1 << PB4);
+        PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2));
+    }
 }
 
 void end_game(uint8_t result) {

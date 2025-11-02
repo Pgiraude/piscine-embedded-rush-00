@@ -16,7 +16,8 @@ ISR(TIMER1_COMPA_vect) {
         PORTB |= (1 << PB2);
         break;
     case 4:
-        DDRB |= (1 << PB4) : PORTB |= (1 << PB4);
+        DDRB |= (1 << PB4);
+        PORTB |= (1 << PB4);
         break;
     default:
         DDRB = 0x00;

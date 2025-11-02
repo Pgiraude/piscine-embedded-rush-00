@@ -5,10 +5,8 @@ void slave_init() {
     TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
 }
 
-void game_state_receive(void) {
+void slave_state_receive(void) {
     switch (game_state) {
-    case GAME_STARTED:
-        break;
     case GAME_WAITING_PLAYER:
         if (TWDR == START_GAME_COUNTDOWN_BIT) {
             button_pressed = 0;
@@ -30,10 +28,8 @@ void game_state_receive(void) {
     }
 }
 
-void game_state_transmit(void) {
+void slave_state_transmit(void) {
     switch (game_state) {
-    case GAME_STARTED:
-        break;
     case GAME_WAITING_PLAYER:
         if (button_pressed) {
             TWDR = PLAYER_READY_BIT;
@@ -61,26 +57,17 @@ void slave_loop(void) {
     uint8_t f_game_over = 0;
 
     init_game_timer();
-    TWI_init(SLAVE_ADDR);
+    slave_init();
     interrupt_init();
     while (1) {
         if (TWCR & (1 << TWINT)) {
-            if (f_game_over == 1)
-                end_game(WON, &f_game_over);
             uint8_t status = TWSR & TW_STATUS_MASK;
 
             switch (status) {
             case TW_ST_SLA_ACK:
             case TW_ST_DATA_ACK:
 
-                game_state_transmit();
-
-                if (button_pressed == 1) {
-                    TWDR = OPPONENT_BUTTON_PRESSED;
-                    f_game_over = 1;
-                } else
-                    TWDR = 'A';
-                break;
+                slave_state_transmit();
 
             case TW_ST_DATA_NACK:
             case TW_SR_STOP:
@@ -88,9 +75,9 @@ void slave_loop(void) {
                 break;
 
             case TW_SR_DATA_ACK:
-                game_state_receive();
-                if (TWDR == OPPONENT_BUTTON_PRESSED)
-                    end_game(LOST, &f_game_over);
+
+                slave_state_receive();
+
                 break;
             default:
                 ft_error(ERROR_1);

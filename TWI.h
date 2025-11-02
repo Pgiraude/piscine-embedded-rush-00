@@ -58,13 +58,14 @@ uint8_t is_master_ready;
 uint8_t is_slave_ready;
 
 void master_init();
-void master_loop();
 void slave_init();
+void master_loop();
 void slave_loop();
 void ft_error(uint8_t status);
-void end_game(uint8_t result, uint8_t *f_game_over);
-void ready_flash();
+void end_game(uint8_t result);
 void interrupt_init();
 void light(uint8_t color);
+void set_game_start(void);
+void init_game_timer(void);
 
 #endif
