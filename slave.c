@@ -9,6 +9,7 @@ void slave_loop(void) {
     uint8_t f_game_over = 0;
     playing = 0;
     uint8_t data;
+    uint8_t score_screen
 
     interrupt_init();
     while (1) {
