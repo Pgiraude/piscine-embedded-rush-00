@@ -7,7 +7,7 @@ uint8_t asign_role() {
     PORTC |= (1 << PC4) | (1 << PC5);
 
 	slave_init();
-	light(GREEN);
+	light(BLUE);
 	while (1)
 	{
 		if (TWCR & (1 << TWINT)) {
@@ -26,7 +26,7 @@ void main() {
 	uint8_t role = asign_role();
 
 	light(BLACK);
-	
+
 	if (role == MASTER) {
 		light(LED4);
 		master_init();

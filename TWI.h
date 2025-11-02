@@ -10,7 +10,7 @@
 #define READ 1
 #define SLAVE_ADDR 0x12
 #define MASTER_ADDR 0x00
-#define MASTER 0
+#define MASTER 2
 #define SLAVE 1
 #define ERROR 2
 #define FREE 0
@@ -45,7 +45,8 @@
 #define SW2_PRESSED !(PIND & (1 << PD4))
 
 uint8_t button_pressed;
-uint8_t playing;
+uint8_t screen_playing;
+uint8_t screen_countdown;
 
 void master_init();
 void master_loop();
@@ -57,5 +58,6 @@ void ready_flash();
 void interrupt_init();
 void light(uint8_t color);
 void call_timer();
+void stop_timer();
 
 #endif

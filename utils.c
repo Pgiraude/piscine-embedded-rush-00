@@ -48,6 +48,7 @@ void light(uint8_t color) {
 	}
 	else if (color == BLACK) {
 		PORTD &= ~((1 << PD3) | (1 << PD5) | (1 << PD6));
+		PORTB &= ~((1 << PB0) | (1 << PB1) | (1 << PB2) | (1 << PB4));
 	}
 	else if (color == LED1) {
 		PORTB = (1 << PB0);
@@ -100,6 +101,15 @@ void call_timer() {
 }
 
 uint8_t count_down = 0;
+void stop_timer() {
+	// Stop the timer by clearing the prescaler bits
+	TCCR1B &= ~((1 << CS12) | (1 << CS11) | (1 << CS10));
+
+	// Disable interrupt on compare match A
+	TIMSK1 &= ~(1 << OCIE1A);
+	count_down = 0;
+}
+
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -120,7 +130,9 @@ ISR(TIMER1_COMPA_vect)
 	{
 		PORTB &= ~(1 << PB0);
 		TCCR1B = 0; // stop timer
-		playing = 1;
+		screen_playing = 1;
+		screen_countdown = 0;
+		count_down = 0;
 	}
 }
 
