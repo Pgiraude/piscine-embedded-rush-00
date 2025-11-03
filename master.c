@@ -9,6 +9,8 @@ void master_init() {
 }
 
 void master_state_transmit(void) {
+    TWDR = DEFAULT_BIT; // Always set a default value first
+
     switch (game_state) {
     case GAME_WAITING_PLAYER:
         if (button_pressed) {
@@ -20,27 +22,25 @@ void master_state_transmit(void) {
             is_master_ready = 0;
             is_slave_ready = 0;
             game_state = GAME_COUNTDOWN;
-            light(BLACK);
-            call_timer();
+            call_timer_countdown();
         }
         break;
     case GAME_COUNTDOWN:
         if (button_pressed) {
             TWDR = OPPONENT_LOST_BIT;
             game_state = GAME_OVER;
-            your_are = WON;
-            end_timer();
+            call_timer_game_over(LOST);
         }
         break;
     case GAME_STARTED:
         if (button_pressed) {
+            DDRB |= (1 << PB0);  // Set direction FIRST
+            PORTB |= (1 << PB0); // Then set value
             TWDR = OPPONENT_BUTTON_PRESSED;
             game_state = GAME_OVER;
-            your_are = WON;
+            call_timer_game_over(WON);
         }
         break;
-    default:
-        TWDR = DEFAULT_BIT;
     }
     button_pressed = 0;
 }
@@ -55,12 +55,13 @@ void master_state_receive(void) {
     case GAME_COUNTDOWN:
         if (TWDR == OPPONENT_LOST_BIT) {
             game_state = GAME_OVER;
+            call_timer_game_over(WON);
         }
         break;
     case GAME_STARTED:
         if (TWDR == OPPONENT_BUTTON_PRESSED) {
-            your_are = LOST;
             game_state = GAME_OVER;
+            call_timer_game_over(LOST);
         }
         break;
     default:
@@ -135,8 +136,6 @@ void master_loop() {
         master_state_receive();
 
         TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
-
-        end_game(your_are);
 
         _delay_ms(5);
     }

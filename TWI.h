@@ -62,7 +62,6 @@ uint8_t playing;
 uint8_t game_state;
 uint8_t is_master_ready;
 uint8_t is_slave_ready;
-uint8_t your_are;
 
 void master_init();
 void master_loop();
@@ -73,8 +72,9 @@ void end_game(uint8_t result);
 void ready_flash();
 void interrupt_init();
 void light(uint8_t color);
-void call_timer();
+void call_timer_countdown();
 void set_game_start(void);
 void end_timer();
+void call_timer_game_over(int status);
 
 #endif

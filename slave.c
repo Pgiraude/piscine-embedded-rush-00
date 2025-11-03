@@ -11,57 +11,50 @@ void slave_state_receive(void) {
         if (TWDR == START_GAME_COUNTDOWN_BIT) {
             button_pressed = 0;
             game_state = GAME_COUNTDOWN;
-            light(BLACK);
-            call_timer();
+            call_timer_countdown();
         }
         break;
     case GAME_COUNTDOWN:
         if (TWDR == OPPONENT_LOST_BIT) {
             game_state = GAME_OVER;
-            your_are = WON;
-            end_timer();
+            call_timer_game_over(WON);
         }
         break;
     case GAME_STARTED:
         if (TWDR == OPPONENT_BUTTON_PRESSED) {
-            your_are = LOST;
             game_state = GAME_OVER;
+            call_timer_game_over(LOST);
         }
         break;
-    default:
-        TWDR = DEFAULT_BIT;
     }
 }
 
 void slave_state_transmit(void) {
+    TWDR = DEFAULT_BIT; // Always set a default value first
+
     switch (game_state) {
     case GAME_WAITING_PLAYER:
         if (button_pressed) {
             TWDR = PLAYER_READY_BIT;
             light(WHITE);
-            button_pressed = 0;
         }
         break;
     case GAME_COUNTDOWN:
         if (button_pressed) {
             TWDR = OPPONENT_LOST_BIT;
-            button_pressed = 0;
-            your_are = WON;
             game_state = GAME_OVER;
-            end_timer();
+            call_timer_game_over(LOST);
         }
         break;
     case GAME_STARTED:
         if (button_pressed) {
             TWDR = OPPONENT_BUTTON_PRESSED;
-            button_pressed = 0;
-            your_are = WON;
             game_state = GAME_OVER;
+            call_timer_game_over(WON);
         }
         break;
-    case GAME_OVER:
-        break;
     }
+    button_pressed = 0;
 }
 
 void slave_loop(void) {
@@ -88,7 +81,6 @@ void slave_loop(void) {
                 ft_error(ERROR_1);
             }
             TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
-            end_game(your_are);
         }
     }
 }
